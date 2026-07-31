@@ -1,0 +1,8 @@
+services:
+  wms.api:
+    image: ${DOCKER_REGISTRY-}wmsapi
+    build:
+      context: .
+      dockerfile: src/Wms.Api/Dockerfile
+    ports:
+      - "8080:8080"
