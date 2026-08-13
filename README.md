@@ -1,6 +1,6 @@
 <div align="center">
 
-# 📦 Warehouse Management System
+# Warehouse Management System
 
 ### Enterprise Warehouse Management Platform built with ASP.NET Core
 
@@ -34,7 +34,7 @@ The project focuses not only on CRUD operations but also on business processes t
 
 ---
 
-# 🎯 Business Goals
+#  Business Goals
 
 The main objective of the project is to digitize warehouse workflows and provide a reliable API for inventory management.
 
@@ -81,7 +81,7 @@ Every operation automatically updates inventory and creates stock movement recor
 
 ---
 
-# 🏗 Architecture
+#  Architecture
 
 The project follows **Clean Architecture**, where each layer has a single responsibility and depends only on the layers below it.
 
@@ -120,7 +120,7 @@ This architecture makes the project easy to extend, maintain, and test.
 
 ---
 
-# 📂 Solution Structure
+#  Solution Structure
 
 ```text
 src/
@@ -159,7 +159,7 @@ tests/
 
 ---
 
-# 📦 Core Modules
+#  Core Modules
 
 ## Authentication
 
@@ -215,7 +215,7 @@ Stores important system events for traceability.
 
 ---
 
-# 🔐 Security
+#  Security
 
 The application implements modern authentication mechanisms.
 
@@ -227,7 +227,7 @@ The application implements modern authentication mechanisms.
 
 ---
 
-# 🚀 Deployment
+#  Deployment
 
 The project can be started either locally or using Docker.
 
