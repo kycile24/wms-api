@@ -15,7 +15,7 @@ The project demonstrates how a modern warehouse can automate inventory movement,
 
 ---
 
-# 📖 Project Overview
+#  Project Overview
 
 Warehouse Management System (WMS) is a backend application designed to simplify warehouse operations and inventory management.
 
@@ -51,7 +51,7 @@ The system allows companies to:
 
 ---
 
-# 🏢 Business Workflow
+#  Business Workflow
 
 The typical business process inside the system looks like this:
 
