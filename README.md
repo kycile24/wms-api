@@ -1,3 +1,5 @@
+**English** · [Українська](README.uk.md)
+
 [![Warehouse — Inventory operations](docs/cover.svg)](https://warehouse-kycile24.onrender.com)
 
 A bilingual inventory dashboard and ASP.NET Core API for warehouse staff. The dashboard shows current stock alerts, pending purchases, active sales orders and recent movements from the connected SQL Server database. The API also manages products, warehouses, suppliers and customers.
