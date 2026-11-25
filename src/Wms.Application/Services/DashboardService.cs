@@ -30,7 +30,7 @@ public class DashboardService : IDashboardService
         var totalInventoryValue = inventoryItems.Sum(i => i.QuantityOnHand * (i.Product?.UnitPrice ?? 0m));
 
         // Позиції з недостатнім залишком (за замовчуванням ліміт 10, якщо не вказано інше)
-        var lowStockCount = inventoryItems.Count(i => i.QuantityAvailable <= 10);
+        var lowStockCount = inventoryItems.Count(i => i.QuantityAvailable <= i.Product.MinimumStockThreshold);
 
         var pendingPurchaseOrders = await _unitOfWork.Repository<PurchaseOrder>()
             .Query()
@@ -71,14 +71,14 @@ public class DashboardService : IDashboardService
 
     public async Task<Result<IReadOnlyList<LowStockReportItemDto>>> GetLowStockAlertsAsync(CancellationToken cancellationToken = default)
     {
-        const int defaultReorderLevel = 10;
+
 
         var lowStockItems = await _unitOfWork.Repository<InventoryItem>()
             .Query()
             .AsNoTracking()
             .Include(i => i.Product)
             .Include(i => i.Warehouse)
-            .Where(i => i.QuantityOnHand - i.QuantityAllocated <= defaultReorderLevel)
+            .Where(i => i.QuantityOnHand - i.QuantityAllocated <= i.Product.MinimumStockThreshold)
             .Select(i => new LowStockReportItemDto(
                 i.ProductId,
                 i.Product != null ? i.Product.Name : string.Empty,
@@ -87,7 +87,7 @@ public class DashboardService : IDashboardService
                 i.Warehouse != null ? i.Warehouse.Name : string.Empty,
                 i.QuantityOnHand,
                 i.QuantityOnHand - i.QuantityAllocated,
-                defaultReorderLevel
+                i.Product.MinimumStockThreshold
             ))
             .ToListAsync(cancellationToken);
 

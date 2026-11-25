@@ -138,6 +138,15 @@ try
     app.UseAuthorization();
 
     app.MapGet("/workspace-mode", () => new { publicDemo });
+    var catalogEndpoint = app.MapGet(publicDemo ? "/demo/catalog" : "/api/dashboard/catalog",
+        async (ApplicationDbContext db, CancellationToken ct) => new { data = await db.InventoryItems.AsNoTracking()
+            .OrderBy(i => i.Product.Name).ThenBy(i => i.Warehouse.Code)
+            .Select(i => new { sku = i.Product.Sku, name = i.Product.Name, category = i.Product.Category.Name,
+                warehouse = i.Warehouse.Name, code = i.Warehouse.Code, price = i.Product.UnitPrice,
+                available = i.QuantityOnHand - i.QuantityAllocated, threshold = i.Product.MinimumStockThreshold,
+                bin = i.Zone + "/" + i.Aisle + "/" + i.Rack + "/" + i.Shelf })
+            .ToListAsync(ct) });
+    if (!publicDemo) catalogEndpoint.RequireAuthorization();
     if (publicDemo)
     {
         app.MapGet("/demo/summary", async (IDashboardService dashboard, CancellationToken ct) =>

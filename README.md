@@ -1,8 +1,18 @@
-# Warehouse Operations
+[![Warehouse — Inventory operations](docs/cover.svg)](https://warehouse-kycile24.onrender.com)
 
 A bilingual inventory dashboard and ASP.NET Core API for warehouse staff. The dashboard shows current stock alerts, pending purchases, active sales orders and recent movements from the connected SQL Server database. The API also manages products, warehouses, suppliers and customers.
 
 [Open the live warehouse dashboard](https://warehouse-kycile24.onrender.com). Explore seeded inventory and filter shortages by product, SKU or warehouse. The public deployment uses a dedicated read-only SQLite demo. The full authenticated application below uses SQL Server.
+
+## From shelf to purchase plan
+
+| Step | Try it in the live workspace |
+| --- | --- |
+| Locate a product | Search a name or SKU, select a warehouse or category, and read the exact storage bin. |
+| Prioritize shortages | Sort stock positions by availability and compare them with the low-stock alerts. |
+| Prepare a purchase | Add positions to the replenishment plan, adjust quantities, and download the plan as CSV. |
+
+The demo opens with 33 products across two warehouses. A plan belongs to the current browser. Exporting it creates a spreadsheet-ready file without placing an order.
 
 ## Run locally
 

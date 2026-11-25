@@ -23,6 +23,8 @@ const messages = {
     moves:['','Надходження','Відвантаження','Переміщення','Коригування']
   }
 };
+Object.assign(messages.en, catalogLabels.en);
+Object.assign(messages.uk, catalogLabels.uk);
 let lang = localStorage.getItem('wms.language') === 'uk' ? 'uk' : 'en';
 let publicDemo = false;
 let token = '', summary = null, lowStock = [], notice = '', error = '';
@@ -51,6 +53,7 @@ function render() {
   document.querySelector('a[href="/swagger"]').hidden = publicDemo;
   byId('error').textContent = error ? t(error) : '';
   byId('status').textContent = notice ? t(notice) : publicDemo ? t('demo') : '';
+  renderCatalog();
   const metrics = byId('metrics');
   metrics.replaceChildren();
   if (!summary) {
@@ -75,6 +78,7 @@ function render() {
     t('moves')[x.movementType] ?? x.movementType,number.format(x.quantity)]),4);
 }
 function signOut(reason = '') {
+  catalog = []; planned = {};
   token = ''; summary = null; lowStock = []; notice = ''; error = reason;
   byId('login').reset(); render();
 }
@@ -82,14 +86,14 @@ async function refresh() {
   const session = token;
   notice = 'loading'; render(); byId('refresh').disabled = true;
   try {
-    const responses = await Promise.all(['summary','low-stock-alerts'].map(path=>
+    const responses = await Promise.all(['summary','low-stock-alerts','catalog'].map(path=>
       fetch((publicDemo ? '/demo/' : '/api/dashboard/')+path,{headers:publicDemo ? {} : {Authorization:'Bearer '+session}})));
     if (session !== token) return;
     if (responses.some(r=>r.status===401)) { signOut('expired'); return; }
     if (responses.some(r=>!r.ok)) throw Error();
-    const [stats,alerts] = await Promise.all(responses.map(r=>r.json()));
+    const [stats,alerts,inventory] = await Promise.all(responses.map(r=>r.json()));
     if (session !== token) return;
-    summary = stats.data; lowStock = alerts.data; notice = '';
+    catalog = inventory.data; summary = stats.data; lowStock = alerts.data; notice = '';
   } catch { if (session === token) notice = 'failed'; }
   finally { byId('refresh').disabled = false; render(); }
 }
@@ -103,7 +107,7 @@ byId('login').addEventListener('submit',async event=>{
     if (!response.ok) { error = 'denied'; return; }
     const payload = await response.json();
     if (!payload.data?.accessToken) { error = 'denied'; return; }
-    token = payload.data.accessToken; byId('password').value = ''; await refresh();
+    token = payload.data.accessToken; loadPlan('account.'+byId('username').value.trim()); byId('password').value = ''; await refresh();
   } catch { error = 'offline'; }
   finally { button.disabled = false; render(); }
 });
@@ -117,6 +121,6 @@ async function initializeWorkspace() {
   const response = await fetch('/workspace-mode');
   if (!response.ok) throw Error();
   publicDemo = (await response.json()).publicDemo;
-  if (publicDemo) await refresh();
+  if (publicDemo) { loadPlan('demo'); await refresh(); }
 }
 initializeWorkspace().catch(() => { error = 'offline'; render(); });

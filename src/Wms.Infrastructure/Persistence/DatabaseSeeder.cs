@@ -103,6 +103,58 @@ public static class DatabaseSeeder
 
         await context.StockMovements.AddRangeAsync(movements);
 
+        var catalog = new (string Category, string Name, string Sku, decimal Price)[]
+        {
+            ("Accessories", "Logitech MX Master 3S", "MX3S", 3990m),
+            ("Accessories", "Logitech K380", "K380", 1890m),
+            ("Accessories", "Anker USB-C Hub", "HUB7", 2150m),
+            ("Accessories", "UGREEN HDMI 2 m", "HDMI2", 350m),
+            ("Accessories", "Baseus 65 W charger", "GAN65", 1790m),
+            ("Accessories", "Jabra Evolve 20", "EV20", 2190m),
+            ("Components", "Kingston NV2 1 TB", "NV21T", 2890m),
+            ("Components", "Samsung 990 EVO 2 TB", "990E2", 5990m),
+            ("Components", "Crucial DDR5 32 GB", "DDR532", 3790m),
+            ("Components", "Noctua NF-A12", "NFA12", 1290m),
+            ("Components", "Corsair RM750e", "RM750", 4690m),
+            ("Networking", "TP-Link Archer AX55", "AX55", 3590m),
+            ("Networking", "UniFi U6 Lite", "U6L", 4490m),
+            ("Networking", "Netgear GS108", "GS108", 1590m),
+            ("Networking", "UGREEN CAT6 5 m", "CAT65", 260m),
+            ("Networking", "TP-Link Deco X50", "X50", 3890m),
+            ("Office", "Brother HL-L2400D", "HL2400", 6750m),
+            ("Office", "Epson EcoTank L3250", "L3250", 8190m),
+            ("Office", "Fellowes monitor arm", "ARM1", 1990m),
+            ("Office", "Leitz document tray", "TRAY1", 420m),
+            ("Office", "A4 copy paper 500 sheets", "A4500", 245m),
+            ("Packing", "Kraft carton 40 cm", "BOX40", 58m),
+            ("Packing", "Thermal labels 100 x 150", "LBL150", 385m),
+            ("Packing", "Packing tape 48 mm", "TAPE48", 68m),
+            ("Packing", "Bubble wrap 10 m", "WRAP10", 195m),
+            ("Packing", "Zebra ZD220 printer", "ZD220", 7390m),
+            ("Tools", "Bosch laser measure", "GLM40", 3290m),
+            ("Tools", "Stanley tape measure", "ST5M", 350m),
+            ("Tools", "Honeywell barcode scanner", "SCAN1", 2890m),
+            ("Tools", "Dymo label maker", "DYMO1", 1690m),
+        };
+        var categories = catalog.Select(item => item.Category).Distinct()
+            .ToDictionary(name => name, name => new Category { Name = name });
+        for (int index = 0; index < catalog.Length; index++)
+        {
+            var item = catalog[index];
+            var product = new Product { Sku = item.Sku, Name = item.Name, UnitPrice = item.Price,
+                Category = categories[item.Category], MinimumStockThreshold = 6 + index % 8 };
+            foreach (var warehouse in new[] { mainWarehouse, regionalWarehouse })
+            {
+                var quantity = (index * 11 + (warehouse == mainWarehouse ? 3 : 17)) % 54;
+                context.InventoryItems.Add(new InventoryItem { Product = product, Warehouse = warehouse,
+                    QuantityOnHand = quantity, Zone = "C", Aisle = (1 + index / 10).ToString("00"),
+                    Rack = (1 + index % 10).ToString("00"), Shelf = "01" });
+                if (quantity > 0)
+                    context.StockMovements.Add(new StockMovement { Product = product, DestinationWarehouse = warehouse,
+                        MovementType = MovementType.Inbound, Quantity = quantity, Reason = "Opening stock" });
+            }
+        }
+
         // Зберігаємо всі засівані дані у базі
         await context.SaveChangesAsync();
     }

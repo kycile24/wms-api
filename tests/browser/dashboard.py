@@ -25,6 +25,16 @@ with sync_playwright() as driver:
     assert int(page.locator("#metrics strong").first.inner_text()) > 0
     page.select_option("#language", "en")
     page.get_by_role("heading", name="Inventory overview").wait_for()
+    assert int(page.locator("#metrics strong").first.inner_text()) == 33
+    page.fill("#catalogQuery", "AX55")
+    assert page.locator("#catalogRows tr").count() == 2
+    page.get_by_role("button", name="Add to plan").first.click()
+    page.locator("#planRows input").fill("12")
+    page.locator("#planRows input").press("Tab")
+    with page.expect_download() as download:
+        page.click("#export")
+    assert '12' in Path(download.value.path()).read_text(encoding="utf-8-sig")
+    page.fill("#catalogQuery", "")
     Path("artifacts").mkdir(exist_ok=True)
     page.screenshot(path="artifacts/warehouse.png", full_page=True)
     page.set_viewport_size({"width": 375, "height": 812})
