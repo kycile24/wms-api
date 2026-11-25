@@ -1,0 +1,15 @@
+name: Warehouse build
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet build src/Wms.Api/Wms.Api.csproj -c Release
+      - run: dotnet test tests/Wms.UnitTests/Wms.UnitTests.csproj -c Release
+      - run: node --check src/Wms.Api/wwwroot/warehouse.js

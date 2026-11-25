@@ -20,7 +20,7 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    Log.Information("Запуск веб-хоста WMS API...");
+    Log.Information("Р—Р°РїСѓСЃРє РІРµР±-С…РѕСЃС‚Р° WMS API...");
 
     var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +28,7 @@ try
 
     // Add Database Context
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? throw new InvalidOperationException("Рядок підключення 'DefaultConnection' не знайдено в appsettings.json.");
+        ?? throw new InvalidOperationException("Р СЏРґРѕРє РїС–РґРєР»СЋС‡РµРЅРЅСЏ 'DefaultConnection' РЅРµ Р·РЅР°Р№РґРµРЅРѕ РІ appsettings.json.");
 
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(connectionString));
@@ -42,23 +42,23 @@ try
     builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
     builder.Services.AddScoped<IAuthService, AuthService>();
 
-    // Категорія та продукти 
+    // РљР°С‚РµРіРѕСЂС–СЏ С‚Р° РїСЂРѕРґСѓРєС‚Рё 
     builder.Services.AddScoped<ICategoryService, CategoryService>();
     builder.Services.AddScoped<IProductService, ProductService>();
 
-    // Склади та Залишки
+    // РЎРєР»Р°РґРё С‚Р° Р—Р°Р»РёС€РєРё
     builder.Services.AddScoped<IWarehouseService, WarehouseService>();
     builder.Services.AddScoped<IInventoryService, InventoryService>();
 
-    // Закупівлі
+    // Р—Р°РєСѓРїС–РІР»С–
     builder.Services.AddScoped<ISupplierService, SupplierService>();
     builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 
-    // Продажі та Відвантаження
+    // РџСЂРѕРґР°Р¶С– С‚Р° Р’С–РґРІР°РЅС‚Р°Р¶РµРЅРЅСЏ
     builder.Services.AddScoped<ICustomerService, CustomerService>();
     builder.Services.AddScoped<ISalesOrderService, SalesOrderService>();
 
-    // Аналітика та Дашборд
+    // РђРЅР°Р»С–С‚РёРєР° С‚Р° Р”Р°С€Р±РѕСЂРґ
     builder.Services.AddScoped<IDashboardService, DashboardService>();
 
     // FluentValidation
@@ -67,7 +67,7 @@ try
 
     // JWT Authentication Configuration
     var jwtSecret = builder.Configuration["JwtSettings:Secret"]
-        ?? throw new InvalidOperationException("Секретний ключ 'JwtSettings:Secret' не вказано в appsettings.json.");
+        ?? throw new InvalidOperationException("РЎРµРєСЂРµС‚РЅРёР№ РєР»СЋС‡ 'JwtSettings:Secret' РЅРµ РІРєР°Р·Р°РЅРѕ РІ appsettings.json.");
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
@@ -119,6 +119,8 @@ try
 
     app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
     app.UseSwagger();
     app.UseSwaggerUI();
 
@@ -129,7 +131,7 @@ try
 
     app.MapControllers();
 
-    // Автоматично застосовуємо міграції/створюємо базу та сідимо тестові дані
+    // РђРІС‚РѕРјР°С‚РёС‡РЅРѕ Р·Р°СЃС‚РѕСЃРѕРІСѓС”РјРѕ РјС–РіСЂР°С†С–С—/СЃС‚РІРѕСЂСЋС”РјРѕ Р±Р°Р·Сѓ С‚Р° СЃС–РґРёРјРѕ С‚РµСЃС‚РѕРІС– РґР°РЅС–
     using (var scope = app.Services.CreateScope())
     {
         var services = scope.ServiceProvider;
@@ -137,18 +139,18 @@ try
         {
             var dbContext = services.GetRequiredService<ApplicationDbContext>();
 
-            // Автоматично створює структуру БД (якщо ще немає міграцій в коді)
+            // РђРІС‚РѕРјР°С‚РёС‡РЅРѕ СЃС‚РІРѕСЂСЋС” СЃС‚СЂСѓРєС‚СѓСЂСѓ Р‘Р” (СЏРєС‰Рѕ С‰Рµ РЅРµРјР°С” РјС–РіСЂР°С†С–Р№ РІ РєРѕРґС–)
             await dbContext.Database.EnsureCreatedAsync();
 
-            // Якщо ви вже створили файли міграцій через 'dotnet ef migrations add', розкоментуйте рядок нижче:
+            // РЇРєС‰Рѕ РІРё РІР¶Рµ СЃС‚РІРѕСЂРёР»Рё С„Р°Р№Р»Рё РјС–РіСЂР°С†С–Р№ С‡РµСЂРµР· 'dotnet ef migrations add', СЂРѕР·РєРѕРјРµРЅС‚СѓР№С‚Рµ СЂСЏРґРѕРє РЅРёР¶С‡Рµ:
             // await dbContext.Database.MigrateAsync();
 
             await DatabaseSeeder.SeedAsync(dbContext);
-            Log.Information("Базу даних успішно ініціалізовано та заповнено початковими даними.");
+            Log.Information("Р‘Р°Р·Сѓ РґР°РЅРёС… СѓСЃРїС–С€РЅРѕ С–РЅС–С†С–Р°Р»С–Р·РѕРІР°РЅРѕ С‚Р° Р·Р°РїРѕРІРЅРµРЅРѕ РїРѕС‡Р°С‚РєРѕРІРёРјРё РґР°РЅРёРјРё.");
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Помилка під час ініціалізації бази даних або сідингу.");
+            Log.Error(ex, "РџРѕРјРёР»РєР° РїС–Рґ С‡Р°СЃ С–РЅС–С†С–Р°Р»С–Р·Р°С†С–С— Р±Р°Р·Рё РґР°РЅРёС… Р°Р±Рѕ СЃС–РґРёРЅРіСѓ.");
         }
     }
 
@@ -157,7 +159,7 @@ try
 }
 catch (Exception ex) when (ex.GetType().Name != "HostAbortedException")
 {
-    Log.Fatal(ex, "Додаток завершився з критичною помилкою на старті!");
+    Log.Fatal(ex, "Р”РѕРґР°С‚РѕРє Р·Р°РІРµСЂС€РёРІСЃСЏ Р· РєСЂРёС‚РёС‡РЅРѕСЋ РїРѕРјРёР»РєРѕСЋ РЅР° СЃС‚Р°СЂС‚С–!");
 }
 finally
 {
