@@ -78,7 +78,7 @@ public class DashboardService : IDashboardService
             .AsNoTracking()
             .Include(i => i.Product)
             .Include(i => i.Warehouse)
-            .Where(i => i.QuantityAvailable <= defaultReorderLevel)
+            .Where(i => i.QuantityOnHand - i.QuantityAllocated <= defaultReorderLevel)
             .Select(i => new LowStockReportItemDto(
                 i.ProductId,
                 i.Product != null ? i.Product.Name : string.Empty,
@@ -86,7 +86,7 @@ public class DashboardService : IDashboardService
                 i.WarehouseId,
                 i.Warehouse != null ? i.Warehouse.Name : string.Empty,
                 i.QuantityOnHand,
-                i.QuantityAvailable,
+                i.QuantityOnHand - i.QuantityAllocated,
                 defaultReorderLevel
             ))
             .ToListAsync(cancellationToken);

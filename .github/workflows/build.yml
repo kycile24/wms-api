@@ -13,3 +13,16 @@ jobs:
       - run: dotnet build src/Wms.Api/Wms.Api.csproj -c Release
       - run: dotnet test tests/Wms.UnitTests/Wms.UnitTests.csproj -c Release
       - run: node --check src/Wms.Api/wwwroot/warehouse.js
+      - name: Test sign-in, live stock data and language switching
+        run: |
+          export WMS_DB_PASSWORD="Aa1!$(openssl rand -hex 18)"
+          export WMS_JWT_SECRET="$(openssl rand -hex 32)"
+          docker compose up -d --build
+          trap 'docker compose down --volumes' EXIT
+          curl --retry 40 --retry-delay 2 --retry-all-errors -fsS http://localhost:8080/ > /dev/null
+          python -m pip install playwright --quiet
+          CHROME_BIN="$(command -v google-chrome)" python tests/browser/dashboard.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Warehouse-dashboard
+          path: artifacts/warehouse.png
