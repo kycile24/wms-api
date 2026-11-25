@@ -2,6 +2,8 @@
 
 A bilingual inventory dashboard and ASP.NET Core API for warehouse staff. The dashboard shows current stock alerts, pending purchases, active sales orders and recent movements from the connected SQL Server database. The API also manages products, warehouses, suppliers and customers.
 
+[Open the live warehouse dashboard](https://warehouse-kycile24.onrender.com). Explore seeded inventory and filter shortages by product, SKU or warehouse. The public deployment uses a dedicated read-only SQLite demo. The full authenticated application below uses SQL Server.
+
 ## Run locally
 
 Install Docker with Linux containers. Set **WMS_DB_PASSWORD** to a strong SQL Server password and **WMS_JWT_SECRET** to a randomly generated secret of at least 32 bytes. In the repository root, run:

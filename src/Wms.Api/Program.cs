@@ -27,11 +27,16 @@ try
     builder.Host.UseSerilog();
 
     // Add Database Context
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? throw new InvalidOperationException("Рядок підключення 'DefaultConnection' не знайдено в appsettings.json.");
-
+    var publicDemo = builder.Configuration.GetValue<bool>("PublicDemo");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlServer(connectionString));
+    {
+        if (publicDemo)
+            options.UseSqlite("Data Source=/tmp/warehouse-demo.db");
+        else
+            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    });
+    if (publicDemo)
+        builder.Configuration["JwtSettings:Secret"] = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48));
 
     // Add JwtSettings
     builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
@@ -121,15 +126,29 @@ try
 
     app.UseDefaultFiles();
     app.UseStaticFiles();
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    if (!publicDemo)
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
 
     app.UseHttpsRedirection();
 
     app.UseAuthentication();
     app.UseAuthorization();
 
-    app.MapControllers();
+    app.MapGet("/workspace-mode", () => new { publicDemo });
+    if (publicDemo)
+    {
+        app.MapGet("/demo/summary", async (IDashboardService dashboard, CancellationToken ct) =>
+            new { data = (await dashboard.GetSummaryAsync(ct)).Value });
+        app.MapGet("/demo/low-stock-alerts", async (IDashboardService dashboard, CancellationToken ct) =>
+            new { data = (await dashboard.GetLowStockAlertsAsync(ct)).Value });
+    }
+    else
+    {
+        app.MapControllers();
+    }
 
     // Автоматично застосовуємо міграції/створюємо базу та сідимо тестові дані
     using (var scope = app.Services.CreateScope())
@@ -150,6 +169,7 @@ try
         }
         catch (Exception ex)
         {
+            if (publicDemo) throw;
             Log.Error(ex, "Помилка під час ініціалізації бази даних або сідингу.");
         }
     }

@@ -2,7 +2,7 @@
 const byId = id => document.getElementById(id);
 const messages = {
   en: {
-    docs:'API reference',language:'Language',logout:'Sign out',operations:'Operations',heading:'Warehouse operations',
+    filter:'Filter by product, SKU or warehouse',demo:'Live sample inventory',docs:'API reference',language:'Language',logout:'Sign out',operations:'Operations',heading:'Warehouse operations',
     intro:'Track stock, spot shortages and review the latest inventory movements.',login:'Sign in',username:'Username or email',
     password:'Password',open:'Open workspace',overview:'Inventory overview',refresh:'Refresh',alerts:'Low-stock alerts',product:'Product',
     warehouse:'Warehouse',available:'Available',threshold:'Reorder level',recent:'Recent stock movements',date:'Date',type:'Movement',
@@ -12,7 +12,7 @@ const messages = {
     expired:'Your session expired. Sign in again.',moves:['','Inbound','Outbound','Transfer','Adjustment']
   },
   uk: {
-    docs:'Довідка API',language:'Мова',logout:'Вийти',operations:'Операції',heading:'Керування складом',
+    filter:'Пошук за товаром, SKU або складом',demo:'Демонстраційні складські запаси',docs:'Довідка API',language:'Мова',logout:'Вийти',operations:'Операції',heading:'Керування складом',
     intro:'Стежте за запасами, вчасно помічайте нестачу та переглядайте останні складські операції.',login:'Вхід',
     username:'Логін або електронна пошта',password:'Пароль',open:'Відкрити робоче місце',overview:'Огляд запасів',refresh:'Оновити',
     alerts:'Запаси, що потребують поповнення',product:'Товар',warehouse:'Склад',available:'Доступно',threshold:'Поріг поповнення',
@@ -24,6 +24,7 @@ const messages = {
   }
 };
 let lang = localStorage.getItem('wms.language') === 'uk' ? 'uk' : 'en';
+let publicDemo = false;
 let token = '', summary = null, lowStock = [], notice = '', error = '';
 const t = key => messages[lang][key];
 function fillRows(id, rows, columns) {
@@ -44,10 +45,12 @@ function render() {
   document.title = t('heading');
   byId('language').value = lang;
   document.querySelectorAll('[data-label]').forEach(el => el.textContent = t(el.dataset.label));
-  byId('welcome').hidden = Boolean(token);
-  byId('dashboard').hidden = byId('logout').hidden = !token;
+  byId('welcome').hidden = publicDemo || Boolean(token);
+  byId('dashboard').hidden = !publicDemo && !token;
+  byId('logout').hidden = publicDemo || !token;
+  document.querySelector('a[href="/swagger"]').hidden = publicDemo;
   byId('error').textContent = error ? t(error) : '';
-  byId('status').textContent = notice ? t(notice) : '';
+  byId('status').textContent = notice ? t(notice) : publicDemo ? t('demo') : '';
   const metrics = byId('metrics');
   metrics.replaceChildren();
   if (!summary) {
@@ -65,7 +68,9 @@ function render() {
     card.append(document.createTextNode(t(key)), amount);
     metrics.append(card);
   }
-  fillRows('alerts',lowStock.map(x=>[x.productSku,x.productName,x.warehouseName,number.format(x.quantityAvailable),number.format(x.reorderLevel)]),5);
+  const query = byId('stockFilter').value.trim().toLocaleLowerCase();
+  const matches = lowStock.filter(x => [x.productSku,x.productName,x.warehouseName].some(value => value.toLocaleLowerCase().includes(query)));
+  fillRows('alerts',matches.map(x=>[x.productSku,x.productName,x.warehouseName,number.format(x.quantityAvailable),number.format(x.reorderLevel)]),5);
   fillRows('movements',summary.recentMovements.map(x=>[date.format(new Date(x.createdAtUtc)),x.productName,
     t('moves')[x.movementType] ?? x.movementType,number.format(x.quantity)]),4);
 }
@@ -78,7 +83,7 @@ async function refresh() {
   notice = 'loading'; render(); byId('refresh').disabled = true;
   try {
     const responses = await Promise.all(['summary','low-stock-alerts'].map(path=>
-      fetch('/api/dashboard/'+path,{headers:{Authorization:'Bearer '+session}})));
+      fetch((publicDemo ? '/demo/' : '/api/dashboard/')+path,{headers:publicDemo ? {} : {Authorization:'Bearer '+session}})));
     if (session !== token) return;
     if (responses.some(r=>r.status===401)) { signOut('expired'); return; }
     if (responses.some(r=>!r.ok)) throw Error();
@@ -106,3 +111,12 @@ byId('logout').onclick = () => signOut();
 byId('refresh').onclick = refresh;
 byId('language').onchange = e => {lang=e.target.value;localStorage.setItem('wms.language',lang);render();};
 render();
+
+byId('stockFilter').addEventListener('input', render);
+async function initializeWorkspace() {
+  const response = await fetch('/workspace-mode');
+  if (!response.ok) throw Error();
+  publicDemo = (await response.json()).publicDemo;
+  if (publicDemo) await refresh();
+}
+initializeWorkspace().catch(() => { error = 'offline'; render(); });
